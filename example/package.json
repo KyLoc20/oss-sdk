@@ -1,0 +1,17 @@
+{
+  "name": "oss-sdk-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Dev-only Express demo for @kyloc20/oss-sdk (not published)",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  },
+  "dependencies": {
+    "@kyloc20/oss-sdk": "workspace:*",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  }
+}

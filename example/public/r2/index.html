@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>oss-sdk · r2</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="top">
+        <div>
+          <p class="brand">oss-sdk</p>
+          <h1>r2 演示</h1>
+        </div>
+        <nav class="nav">
+          <a href="/">首页</a>
+          <a href="/example/local-fs">localFs</a>
+          <a class="active" href="/example/r2">r2</a>
+        </nav>
+      </header>
+
+      <div class="workspace">
+        <div class="column">
+          <div class="scroll">
+            <section class="panel">
+              <h2>Credentials</h2>
+              <p class="cred-note">
+                凭据<strong>仅脱敏显示</strong>。使用 .env 需启动时设置 <code>EXAMPLE_ALLOW_R2=1</code>，并显式勾选下方选项；
+                此时 <code>endpoint</code>/密钥固定来自 .env（忽略页面篡改）。服务只监听 <code>127.0.0.1</code>。
+              </p>
+              <form id="cred-form" class="form">
+                <label class="check">
+                  <input type="checkbox" name="useEnvCredentials" />
+                  使用 .env 凭据（需 EXAMPLE_ALLOW_R2=1；endpoint 由服务端固定）
+                </label>
+                <div class="grid-2">
+                  <label>
+                    providerId
+                    <input name="providerId" value="media" autocomplete="off" />
+                  </label>
+                  <label>
+                    bucket
+                    <input name="bucket" autocomplete="off" />
+                  </label>
+                  <label>
+                    accountId（脱敏）
+                    <input name="accountId" class="masked" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    endpoint（可选）
+                    <input name="endpoint" placeholder="https://….r2.cloudflarestorage.com" autocomplete="off" />
+                  </label>
+                  <label>
+                    accessKeyId（脱敏）
+                    <input name="accessKeyId" class="masked" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    secretAccessKey（脱敏）
+                    <input name="secretAccessKey" class="masked" autocomplete="off" spellcheck="false" />
+                  </label>
+                  <label>
+                    region
+                    <input name="region" value="auto" autocomplete="off" />
+                  </label>
+                </div>
+                <div class="actions">
+                  <button type="button" id="reload-defaults" class="ghost">从 .env 重新预填（脱敏）</button>
+                  <button type="button" id="probe-btn">probe</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <h2>create</h2>
+              <form id="create-form" class="form">
+                <label>
+                  uniqueName / locator
+                  <input name="uniqueName" required value="demo/hello.txt" />
+                </label>
+                <label>
+                  contentType（可选，选文件后自动识别）
+                  <input name="contentType" placeholder="选择文件后自动填写，也可手改" />
+                </label>
+                <label class="check">
+                  <input type="checkbox" name="upsert" checked />
+                  upsert
+                </label>
+                <label>
+                  file
+                  <input name="file" type="file" required />
+                </label>
+                <button type="submit">create</button>
+              </form>
+              <pre class="snippet">await provider.create({ uniqueName, sourceLocator });
+// result.locator → r2:{bucket}/{key}</pre>
+            </section>
+
+            <section class="panel">
+              <h2>checkExist</h2>
+              <form id="check-form" class="form row">
+                <label>
+                  uniqueName / locator
+                  <input name="uniqueName" required value="demo/hello.txt" />
+                </label>
+                <button type="submit">checkExist</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <h2>get</h2>
+              <form id="get-form" class="form row">
+                <label>
+                  uniqueName / locator
+                  <input name="uniqueName" required value="demo/hello.txt" />
+                </label>
+                <button type="submit">get → download</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <h2>delete</h2>
+              <form id="delete-form" class="form row">
+                <label>
+                  uniqueName / locator
+                  <input name="uniqueName" required value="demo/hello.txt" />
+                </label>
+                <button type="submit" class="danger">delete</button>
+              </form>
+            </section>
+          </div>
+        </div>
+
+        <div class="column">
+          <section class="panel result-panel">
+            <div class="result-head">
+              <h2>响应结果</h2>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span id="result-status" class="result-status">IDLE</span>
+                <button type="button" id="clear-log" class="ghost">清空</button>
+              </div>
+            </div>
+            <pre id="log" class="result-body">在左侧发起调用后，结果会显示在这里。</pre>
+          </section>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/r2/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+{
+  "name": "@kyloc20/oss-sdk",
+  "version": "0.1.0",
+  "description": "Multi-provider object storage SDK (localFs, remoteFs, r2)",
+  "license": "MIT",
+  "author": "KyLoc20",
+  "homepage": "https://github.com/KyLoc20/oss-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/KyLoc20/oss-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KyLoc20/oss-sdk.git"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js",
+      "default": "./dist/node.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "docs"
+  ],
+  "scripts": {
+    "clean": "node --input-type=module -e \"import fs from 'node:fs'; fs.rmSync('dist', { recursive: true, force: true })\"",
+    "build": "pnpm clean && tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "verify": "pnpm typecheck",
+    "audit": "pnpm audit --prod",
+    "pack:check": "npm pack --dry-run --ignore-scripts",
+    "prepack": "pnpm build",
+    "example": "pnpm --filter oss-sdk-example start",
+    "example:dev": "pnpm --filter oss-sdk-example dev"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1166.0"
+  },
+  "peerDependencies": {
+    "undici": "^7.10.0"
+  },
+  "peerDependenciesMeta": {
+    "undici": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "~5.7.2",
+    "undici": "^7.10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

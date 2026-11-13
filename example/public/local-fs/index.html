@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>oss-sdk · localFs</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="top">
+        <div>
+          <p class="brand">oss-sdk</p>
+          <h1>localFs 演示</h1>
+        </div>
+        <nav class="nav">
+          <a href="/">首页</a>
+          <a class="active" href="/example/local-fs">localFs</a>
+          <a href="/example/r2">r2</a>
+        </nav>
+      </header>
+
+      <div class="workspace">
+        <div class="column">
+          <div class="scroll">
+            <section class="panel">
+              <h2>Provider</h2>
+              <p id="meta" class="meta">加载中…</p>
+            </section>
+
+            <section class="panel">
+              <h2>create</h2>
+              <form id="create-form" class="form">
+                <label>
+                  uniqueName
+                  <input name="uniqueName" required value="demo/hello.txt" />
+                </label>
+                <label>
+                  contentType（可选，选文件后自动识别）
+                  <input name="contentType" placeholder="选择文件后自动填写，也可手改" />
+                </label>
+                <label class="check">
+                  <input type="checkbox" name="upsert" checked />
+                  upsert
+                </label>
+                <label>
+                  file
+                  <input name="file" type="file" required />
+                </label>
+                <button type="submit">create</button>
+              </form>
+              <pre class="snippet">await client.create({
+  provider: "localFs",
+  uniqueName,
+  sourceLocator,
+});</pre>
+            </section>
+
+            <section class="panel">
+              <h2>checkExist</h2>
+              <form id="check-form" class="form row">
+                <label>
+                  uniqueName
+                  <input name="uniqueName" required value="demo/hello.txt" />
+                </label>
+                <button type="submit">checkExist</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <h2>get</h2>
+              <form id="get-form" class="form row">
+                <label>
+                  uniqueName
+                  <input name="uniqueName" required value="demo/hello.txt" />
+                </label>
+                <button type="submit">get → download</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <h2>delete</h2>
+              <form id="delete-form" class="form row">
+                <label>
+                  uniqueName
+                  <input name="uniqueName" required value="demo/hello.txt" />
+                </label>
+                <button type="submit" class="danger">delete</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="result-head">
+                <h2>当前对象</h2>
+                <button type="button" id="refresh-objects" class="ghost">刷新</button>
+              </div>
+              <div id="objects" class="objects"><p class="hint">加载中…</p></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="column">
+          <section class="panel result-panel">
+            <div class="result-head">
+              <h2>响应结果</h2>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <span id="result-status" class="result-status">IDLE</span>
+                <button type="button" id="clear-log" class="ghost">清空</button>
+              </div>
+            </div>
+            <pre id="log" class="result-body">在左侧发起调用后，结果会显示在这里。</pre>
+          </section>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/local-fs/app.js"></script>
+  </body>
+</html>
