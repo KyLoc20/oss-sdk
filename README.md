@@ -106,19 +106,23 @@ src/
   node.ts        # + localFs
 docs/
   protocol.md
+  npm-trusted-publishing.md
 example/         # dev-only Express demos (not published)
 ```
 
 ## Publish
 
+Releases use **npm Trusted Publishing (OIDC)** from GitHub Actions. See [docs/npm-trusted-publishing.md](docs/npm-trusted-publishing.md) for setup, pitfalls, and a checklist for other packages.
+
 ```bash
 pnpm build
 pnpm pack:check
-# tag v0.1.0 matching package.json, or:
-npm publish --access public
+# Bump package.json version, push main, then:
+git tag vX.Y.Z    # must match package.json version
+git push origin main vX.Y.Z
 ```
 
-CI: a push to `main` runs the build. A tag `v*.*.*` publishes with `NPM_TOKEN` (see `.github/workflows/`).
+CI: a push to `main` runs checks. A tag `v*.*.*` runs `.github/workflows/release.yml` and publishes to npm (no long-lived `NPM_TOKEN`).
 
 Dev demo (not published; binds to `127.0.0.1` by default):
 

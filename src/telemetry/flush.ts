@@ -5,8 +5,8 @@ import { resolveOssSdkTelemetryConfig } from "./config.js";
 import { getOssSdkTelemetryBufferState, takeOssSdkTelemetryEvents } from "./buffer.js";
 import type { OssSdkTelemetryFilePayload } from "./types.js";
 
-/** Keep in sync with package.json version. */
-export const OSS_SDK_VERSION = "0.1.0";
+/** Keep in sync with package.json version (see scripts/check-sdk-version.mjs). */
+export const OSS_SDK_VERSION = "0.1.2";
 
 function hash6(content: string): string {
     return createHash("sha256").update(content, "utf8").digest("hex").slice(0, 6);

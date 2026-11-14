@@ -1,6 +1,6 @@
 {
   "name": "@kyloc20/oss-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Multi-provider object storage SDK (localFs, remoteFs, r2)",
   "license": "MIT",
   "author": "KyLoc20",
@@ -41,7 +41,7 @@
     "build": "pnpm clean && tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "dev": "tsc -p tsconfig.build.json --watch",
-    "verify": "pnpm typecheck",
+    "verify": "pnpm typecheck && pnpm build && node scripts/check-sdk-version.mjs",
     "audit": "pnpm audit --prod",
     "pack:check": "npm pack --dry-run --ignore-scripts",
     "prepack": "pnpm build",

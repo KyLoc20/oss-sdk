@@ -1,13 +1,16 @@
+import { StorageConfigError } from "../core/errors.js";
 import { R2_STORAGE_PREFIX } from "../types/provider-id.js";
 import type { GetStorageProviderIdParams } from "./storage-protocol.js";
 
 function requireR2Field(label: string, value: unknown): string {
     if (typeof value !== "string" || value.trim() === "") {
-        throw new Error(`getStorageProviderId(r2): ${label} is required`);
+        throw new StorageConfigError(`getStorageProviderId(r2): ${label} is required`);
     }
     const trimmed = value.trim();
     if (trimmed.includes("/") || trimmed.includes(":")) {
-        throw new Error(`getStorageProviderId(r2): ${label} must not contain ":" or "/" (got "${value}")`);
+        throw new StorageConfigError(
+            `getStorageProviderId(r2): ${label} must not contain ":" or "/" (got "${value}")`,
+        );
     }
     return trimmed;
 }
@@ -26,7 +29,7 @@ export function getStorageProviderId(params: GetStorageProviderIdParams): string
         return `${R2_STORAGE_PREFIX}${accountId}:${bucket}`;
     }
     if (protocol === "local-fs" || protocol === "remote-fs") {
-        throw new Error(`getStorageProviderId: protocol "${protocol}" is not implemented yet`);
+        throw new StorageConfigError(`getStorageProviderId: protocol "${protocol}" is not implemented yet`);
     }
-    throw new Error(`getStorageProviderId: unknown protocol "${String(protocol)}"`);
+    throw new StorageConfigError(`getStorageProviderId: unknown protocol "${String(protocol)}"`);
 }

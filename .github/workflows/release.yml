@@ -41,8 +41,8 @@ jobs:
           fi
           echo "Publishing @kyloc20/oss-sdk@$PKG_VERSION"
 
-      - name: Typecheck
-        run: pnpm typecheck
+      - name: Verify release
+        run: pnpm verify
 
       # Node 22 ships npm 10; Trusted Publishing needs npm >= 11.5.1 or publish gets E404.
       - name: Upgrade npm for Trusted Publishing
