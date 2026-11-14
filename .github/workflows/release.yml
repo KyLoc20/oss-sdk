@@ -49,13 +49,6 @@ jobs:
           node -v
           npm -v
 
-      # Bootstrap (first publish): NPM_TOKEN = granular token with Bypass 2FA on @kyloc20.
-      # npm uses OIDC when Trusted Publisher is configured; token is fallback until then.
-      # After @kyloc20/oss-sdk is on npm and Trusted Publisher is set:
-      #   1. Remove the env block below.
-      #   2. Bump version, push tag, confirm Release passes without NPM_TOKEN.
-      #   3. Delete the NPM_TOKEN secret and revoke the bootstrap token on npm.
+      # Trusted Publishing (OIDC). npm CLI authenticates via GitHub id-token.
       - name: Publish to npm
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,6 +1,6 @@
 {
   "name": "@kyloc20/oss-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Multi-provider object storage SDK (localFs, remoteFs, r2)",
   "license": "MIT",
   "author": "KyLoc20",
