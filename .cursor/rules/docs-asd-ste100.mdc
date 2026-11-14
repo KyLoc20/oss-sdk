@@ -1,0 +1,37 @@
+---
+description: Write project documentation in ASD-STE100 Simplified Technical English by default
+alwaysApply: true
+---
+
+# Documentation language: ASD-STE100
+
+Unless the user explicitly asks for another language or style, write and update **all documentation** in **ASD Simplified Technical English (ASD-STE100)**.
+
+Applies to: `README*`, `docs/**`, `**/*.md`, example/demo copy that acts as docs, and any new doc the agent creates.
+
+## STE writing rules
+
+- Prefer short sentences (about one idea each).
+- Use active voice and simple, common words.
+- Prefer present tense for facts; use imperative for procedures.
+- Keep approved domain nouns (`provider`, `locator`, `flush`, API names) when needed.
+- Avoid Chinese unless the user explicitly requests it.
+- Do not invent jargon; keep meaning faithful to the source.
+
+## Examples
+
+```markdown
+<!-- ❌ Avoid -->
+本协议旨在统一多后端对象存储的抽象，并尽可能覆盖各类边界情况。
+
+<!-- ✅ Prefer -->
+This SDK gives one API for object storage on many backends.
+```
+
+```markdown
+<!-- ❌ Avoid -->
+Callers should endeavor to ensure configuration validity prior to invocation.
+
+<!-- ✅ Prefer -->
+Check the config before you call the API.
+```
