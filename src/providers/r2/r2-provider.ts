@@ -14,6 +14,7 @@ import {
     HeadBucketCommand,
     HeadObjectCommand,
     ListBucketsCommand,
+    ListMultipartUploadsCommand,
     PutObjectCommand,
     S3Client,
     UploadPartCommand,
@@ -101,6 +102,47 @@ function resolveObjectRef(
     const key = normalizeUniqueName(uniqueNameOrLocator);
     const bucket = optionsBucket ?? defaultBucket;
     return { bucket, key, locator: encodeR2Locator(bucket, key) };
+}
+
+/** Drop orphaned multipart sessions (e.g. process killed mid-upload) before starting a new one. */
+async function abortOngoingMultipartUploadsForKey(
+    client: S3Client,
+    bucket: string,
+    key: string,
+    signal?: AbortSignal,
+): Promise<void> {
+    let keyMarker: string | undefined;
+    let uploadIdMarker: string | undefined;
+    for (;;) {
+        const listed = await client.send(
+            new ListMultipartUploadsCommand({
+                Bucket: bucket,
+                Prefix: key,
+                KeyMarker: keyMarker,
+                UploadIdMarker: uploadIdMarker,
+            }),
+            { abortSignal: signal },
+        );
+        for (const upload of listed.Uploads ?? []) {
+            if (upload.Key === key && upload.UploadId) {
+                await client
+                    .send(
+                        new AbortMultipartUploadCommand({
+                            Bucket: bucket,
+                            Key: key,
+                            UploadId: upload.UploadId,
+                        }),
+                        { abortSignal: signal },
+                    )
+                    .catch(() => undefined);
+            }
+        }
+        if (!listed.IsTruncated) {
+            return;
+        }
+        keyMarker = listed.NextKeyMarker;
+        uploadIdMarker = listed.NextUploadIdMarker;
+    }
 }
 
 /** Cloudflare R2 provider via S3-compatible API. Locator: `r2:{bucket}/{key}`. */
@@ -363,6 +405,15 @@ export function createR2StorageProvider(input: R2StorageProviderOptions): R2Stor
                         } finally {
                             await fh.close();
                         }
+                    }
+
+                    if (params.upsert !== false) {
+                        await abortOngoingMultipartUploadsForKey(
+                            client,
+                            ref.bucket,
+                            ref.key,
+                            params.signal,
+                        );
                     }
 
                     const created = await client.send(

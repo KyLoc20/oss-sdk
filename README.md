@@ -2,9 +2,11 @@
 
 Multi-provider object storage SDK (`localFs`, `remoteFs`, `r2`) with a shared API:
 
-`checkExist` · `get` · `create` · `delete`
+`checkExist` · `get` · `create` · `delete` · `getStorageProviderId` · `verifyStorageProvider`
 
-**协议细节见 [docs/protocol.md](./docs/protocol.md)。**
+**Protocol details: [docs/protocol.md](./docs/protocol.md). Operation telemetry: [docs/telemetry.md](./docs/telemetry.md) (`OSS_SDK_TELEMETRY_ON` + `OSS_SDK_TELEMETRY_DIR`).**
+
+Service-wide R2 provider id: `r2:{accountId}:{bucket}` via `getStorageProviderId({ protocol: "r2", accountId, bucket })`.
 
 ## Providers
 
@@ -22,7 +24,7 @@ pnpm add @kyloc20/oss-sdk
 pnpm add undici
 ```
 
-本仓库开发使用 **pnpm**。
+This repository uses **pnpm** for development.
 
 ```bash
 pnpm install
@@ -38,6 +40,7 @@ import {
   createStorageClient,
   createRemoteFsStorageProvider,
   createR2StorageProvider,
+  getStorageProviderId,
 } from "@kyloc20/oss-sdk";
 import { createLocalFsStorageProvider } from "@kyloc20/oss-sdk/node";
 
@@ -53,7 +56,11 @@ const client = createStorageClient({
       apiRoot: "/v0/upload/file",
     }),
     createR2StorageProvider({
-      id: "media",
+      id: getStorageProviderId({
+        protocol: "r2",
+        accountId: process.env.R2_ACCOUNT_ID!,
+        bucket: process.env.R2_BUCKET!,
+      }),
       accountId: process.env.R2_ACCOUNT_ID!,
       accessKeyId: process.env.R2_ACCESS_KEY_ID!,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
@@ -91,9 +98,11 @@ await client.delete({ provider: "r2", uniqueName: "r2:my-bucket/feed/a.jpg" });
 src/
   core/          # client, registry, errors, http/retry helpers
   types/         # StorageProvider contract + provider id / r2 locator
+  discovery/     # getStorageProviderId + verifyStorageProvider
+  telemetry/     # best-effort op telemetry → OSS_SDK_TELEMETRY_DIR
   providers/     # local-fs | remote-fs | r2
   adapters/      # parcel upload adapter bridge
-  index.ts       # remoteFs + r2
+  index.ts       # remoteFs + r2 + discovery
   node.ts        # + localFs
 docs/
   protocol.md
@@ -109,13 +118,13 @@ pnpm pack:check
 npm publish --access public
 ```
 
-CI：push 到 `main` 跑构建；推送 tag `v*.*.*` 时用 `NPM_TOKEN` 发布（见 `.github/workflows/`）。
+CI: a push to `main` runs the build. A tag `v*.*.*` publishes with `NPM_TOKEN` (see `.github/workflows/`).
 
-开发演示（不参与发布；默认仅 `127.0.0.1`）：
+Dev demo (not published; binds to `127.0.0.1` by default):
 
 ```bash
 pnpm build
-# 使用 .env 中的 R2 凭据时：
+# To use R2 credentials from .env:
 # EXAMPLE_ALLOW_R2=1 pnpm example
 pnpm example
 # http://127.0.0.1:3789/example/local-fs

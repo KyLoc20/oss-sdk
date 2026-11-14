@@ -10,6 +10,16 @@
 export * from "./types/index.js";
 export * from "./core/index.js";
 export * from "./adapters/index.js";
+export * from "./discovery/index.js";
+export {
+    flushOssSdkTelemetry,
+    isOssSdkTelemetryEnabled,
+    isOssSdkTelemetryEnabledSync,
+    OSS_SDK_VERSION,
+    type OssSdkTelemetryEvent,
+    type OssSdkTelemetryFilePayload,
+    type OssSdkTelemetryOp,
+} from "./telemetry/index.js";
 
 export {
     createRemoteFsStorageProvider,

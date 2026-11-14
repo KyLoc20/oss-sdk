@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,10 +11,10 @@
       <header class="top">
         <div>
           <p class="brand">oss-sdk</p>
-          <h1>localFs 演示</h1>
+          <h1>localFs demo</h1>
         </div>
         <nav class="nav">
-          <a href="/">首页</a>
+          <a href="/">Home</a>
           <a class="active" href="/example/local-fs">localFs</a>
           <a href="/example/r2">r2</a>
         </nav>
@@ -25,7 +25,7 @@
           <div class="scroll">
             <section class="panel">
               <h2>Provider</h2>
-              <p id="meta" class="meta">加载中…</p>
+              <p id="meta" class="meta">Loading…</p>
             </section>
 
             <section class="panel">
@@ -36,8 +36,8 @@
                   <input name="uniqueName" required value="demo/hello.txt" />
                 </label>
                 <label>
-                  contentType（可选，选文件后自动识别）
-                  <input name="contentType" placeholder="选择文件后自动填写，也可手改" />
+                  contentType (optional; auto-detected after file select)
+                  <input name="contentType" placeholder="Filled after file select; you may edit" />
                 </label>
                 <label class="check">
                   <input type="checkbox" name="upsert" checked />
@@ -91,10 +91,10 @@
 
             <section class="panel">
               <div class="result-head">
-                <h2>当前对象</h2>
-                <button type="button" id="refresh-objects" class="ghost">刷新</button>
+                <h2>Current objects</h2>
+                <button type="button" id="refresh-objects" class="ghost">Refresh</button>
               </div>
-              <div id="objects" class="objects"><p class="hint">加载中…</p></div>
+              <div id="objects" class="objects"><p class="hint">Loading…</p></div>
             </section>
           </div>
         </div>
@@ -102,13 +102,13 @@
         <div class="column">
           <section class="panel result-panel">
             <div class="result-head">
-              <h2>响应结果</h2>
+              <h2>Response</h2>
               <div style="display: flex; gap: 0.5rem; align-items: center">
                 <span id="result-status" class="result-status">IDLE</span>
-                <button type="button" id="clear-log" class="ghost">清空</button>
+                <button type="button" id="clear-log" class="ghost">Clear</button>
               </div>
             </div>
-            <pre id="log" class="result-body">在左侧发起调用后，结果会显示在这里。</pre>
+            <pre id="log" class="result-body">Results from calls on the left show here.</pre>
           </section>
         </div>
       </div>

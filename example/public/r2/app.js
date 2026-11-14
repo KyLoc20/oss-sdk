@@ -49,8 +49,8 @@ function applyDefaults(defaults, allowEnvCredentials = false) {
     useEnv.disabled = !allowEnvCredentials;
     useEnv.checked = Boolean(allowEnvCredentials && defaults?.useEnvCredentials);
     useEnv.title = allowEnvCredentials
-      ? "显式使用 .env；endpoint/密钥由服务端固定读取，请求里的 endpoint 无效"
-      : "需要 EXAMPLE_ALLOW_R2=1 才能使用 .env 凭据";
+      ? "Use .env explicitly; endpoint/secrets are fixed by the server; request endpoint is ignored"
+      : "Set EXAMPLE_ALLOW_R2=1 to use .env credentials";
   }
   for (const [key, value] of Object.entries(defaults || {})) {
     if (key === "useEnvCredentials") continue;
@@ -59,7 +59,9 @@ function applyDefaults(defaults, allowEnvCredentials = false) {
       input.value = value;
       if (SECRET_FIELDS.includes(key)) {
         input.readOnly = useEnv?.checked ?? false;
-        input.title = useEnv?.checked ? "脱敏显示；实际密钥由服务端从 .env 读取" : "";
+        input.title = useEnv?.checked
+          ? "Redacted display; server reads real secrets from .env"
+          : "";
       }
     }
   }
@@ -87,8 +89,8 @@ async function loadDefaults() {
     {
       ok: true,
       message: data.allowEnvCredentials
-        ? "已预填（脱敏）。勾选 useEnvCredentials 时 endpoint/密钥固定来自 .env"
-        : "已预填（脱敏）。未设置 EXAMPLE_ALLOW_R2=1，请手填凭据或启用该开关后重启",
+        ? "Prefilled (redacted). With useEnvCredentials, endpoint/secrets come from .env"
+        : "Prefilled (redacted). EXAMPLE_ALLOW_R2=1 is not set; enter credentials or enable the flag and restart",
       defaults: data.defaults,
       configured: data.configured,
       allowEnvCredentials: data.allowEnvCredentials,
@@ -107,19 +109,19 @@ credForm.elements.namedItem("useEnvCredentials")?.addEventListener("change", () 
       const input = credForm.elements.namedItem(key);
       if (input && isMaskedValue(input.value)) {
         input.value = "";
-        input.placeholder = "手动填写明文（仅本次请求使用）";
+        input.placeholder = "Enter plaintext (this request only)";
       }
     }
   }
 });
 
 document.getElementById("reload-defaults").addEventListener("click", async (event) => {
-  await withButtonLoading(event.currentTarget, () => loadDefaults(), "预填中…");
+  await withButtonLoading(event.currentTarget, () => loadDefaults(), "Prefilling…");
 });
 
 document.getElementById("probe-btn").addEventListener("click", async (event) => {
   await withButtonLoading(event.currentTarget, async () => {
-    result.loading("probe 中…");
+    result.loading("probe…");
     const data = await readJson(
       await fetch("/api/r2/probe", {
         method: "POST",
@@ -135,7 +137,7 @@ createForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = createForm.querySelector('button[type="submit"]');
   await withButtonLoading(button, async () => {
-    result.loading("create 中…");
+    result.loading("create…");
     const body = new FormData(createForm);
     body.set("upsert", body.get("upsert") ? "true" : "false");
     if (!String(body.get("contentType") || "").trim()) {
@@ -155,7 +157,7 @@ document.getElementById("check-form").addEventListener("submit", async (event) =
   const form = event.currentTarget;
   const button = form.querySelector('button[type="submit"]');
   await withButtonLoading(button, async () => {
-    result.loading("checkExist 中…");
+    result.loading("checkExist…");
     const uniqueName = new FormData(form).get("uniqueName");
     const data = await readJson(
       await fetch("/api/r2/checkExist", {
@@ -173,7 +175,7 @@ document.getElementById("get-form").addEventListener("submit", async (event) => 
   const form = event.currentTarget;
   const button = form.querySelector('button[type="submit"]');
   await withButtonLoading(button, async () => {
-    result.loading("get 中…");
+    result.loading("get…");
     const uniqueName = String(new FormData(form).get("uniqueName") || "");
     const res = await fetch("/api/r2/get", {
       method: "POST",
@@ -201,7 +203,7 @@ document.getElementById("get-form").addEventListener("submit", async (event) => 
       }
     }
     result.show({ ok: true, downloaded: a.download, bytes: blob.size, result: sdkResult }, true);
-  }, "下载中…");
+  }, "Downloading…");
 });
 
 document.getElementById("delete-form").addEventListener("submit", async (event) => {
@@ -209,7 +211,7 @@ document.getElementById("delete-form").addEventListener("submit", async (event) 
   const form = event.currentTarget;
   const button = form.querySelector('button[type="submit"]');
   await withButtonLoading(button, async () => {
-    result.loading("delete 中…");
+    result.loading("delete…");
     const uniqueName = new FormData(form).get("uniqueName");
     const data = await readJson(
       await fetch("/api/r2/delete", {

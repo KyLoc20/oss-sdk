@@ -43,7 +43,7 @@ async function loadObjects() {
     return;
   }
   if (!data.objects.length) {
-    objectsEl.innerHTML = `<p class="hint">暂无对象</p>`;
+    objectsEl.innerHTML = `<p class="hint">No objects</p>`;
     return;
   }
   objectsEl.innerHTML = data.objects
@@ -54,7 +54,7 @@ async function loadObjects() {
           <strong>${escapeHtml(obj.uniqueName)}</strong>
           <div class="object-meta">${obj.size} bytes · ${escapeHtml(obj.lastModified)}</div>
         </div>
-        <button type="button" data-fill="${escapeAttr(obj.uniqueName)}">填入</button>
+        <button type="button" data-fill="${escapeAttr(obj.uniqueName)}">Fill</button>
       </article>`,
     )
     .join("");
@@ -64,7 +64,7 @@ createForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = createForm.querySelector('button[type="submit"]');
   await withButtonLoading(button, async () => {
-    result.loading("create 中…");
+    result.loading("create…");
     const body = new FormData(createForm);
     body.set("upsert", body.get("upsert") ? "true" : "false");
     if (!String(body.get("contentType") || "").trim()) {
@@ -81,7 +81,7 @@ document.getElementById("check-form").addEventListener("submit", async (event) =
   const form = event.currentTarget;
   const button = form.querySelector('button[type="submit"]');
   await withButtonLoading(button, async () => {
-    result.loading("checkExist 中…");
+    result.loading("checkExist…");
     const uniqueName = new FormData(form).get("uniqueName");
     const data = await readJson(
       await fetch("/api/local-fs/checkExist", {
@@ -99,7 +99,7 @@ document.getElementById("get-form").addEventListener("submit", async (event) => 
   const form = event.currentTarget;
   const button = form.querySelector('button[type="submit"]');
   await withButtonLoading(button, async () => {
-    result.loading("get 中…");
+    result.loading("get…");
     const uniqueName = String(new FormData(form).get("uniqueName") || "");
     const res = await fetch("/api/local-fs/get", {
       method: "POST",
@@ -127,7 +127,7 @@ document.getElementById("get-form").addEventListener("submit", async (event) => 
       }
     }
     result.show({ ok: true, downloaded: a.download, bytes: blob.size, result: sdkResult }, true);
-  }, "下载中…");
+  }, "Downloading…");
 });
 
 document.getElementById("delete-form").addEventListener("submit", async (event) => {
@@ -135,7 +135,7 @@ document.getElementById("delete-form").addEventListener("submit", async (event) 
   const form = event.currentTarget;
   const button = form.querySelector('button[type="submit"]');
   await withButtonLoading(button, async () => {
-    result.loading("delete 中…");
+    result.loading("delete…");
     const uniqueName = new FormData(form).get("uniqueName");
     const data = await readJson(
       await fetch("/api/local-fs/delete", {
@@ -150,7 +150,7 @@ document.getElementById("delete-form").addEventListener("submit", async (event) 
 });
 
 document.getElementById("refresh-objects").addEventListener("click", async (event) => {
-  await withButtonLoading(event.currentTarget, () => loadObjects(), "刷新中…");
+  await withButtonLoading(event.currentTarget, () => loadObjects(), "Refreshing…");
 });
 document.getElementById("clear-log").addEventListener("click", () => result.clear());
 objectsEl.addEventListener("click", (event) => {

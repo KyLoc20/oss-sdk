@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,10 +11,10 @@
       <header class="top">
         <div>
           <p class="brand">oss-sdk</p>
-          <h1>r2 演示</h1>
+          <h1>r2 demo</h1>
         </div>
         <nav class="nav">
-          <a href="/">首页</a>
+          <a href="/">Home</a>
           <a href="/example/local-fs">localFs</a>
           <a class="active" href="/example/r2">r2</a>
         </nav>
@@ -26,13 +26,15 @@
             <section class="panel">
               <h2>Credentials</h2>
               <p class="cred-note">
-                凭据<strong>仅脱敏显示</strong>。使用 .env 需启动时设置 <code>EXAMPLE_ALLOW_R2=1</code>，并显式勾选下方选项；
-                此时 <code>endpoint</code>/密钥固定来自 .env（忽略页面篡改）。服务只监听 <code>127.0.0.1</code>。
+                Credentials are shown <strong>redacted only</strong>. To use .env, set
+                <code>EXAMPLE_ALLOW_R2=1</code> at start and check the option below.
+                Then <code>endpoint</code> and secrets always come from .env (page edits are ignored).
+                The server listens on <code>127.0.0.1</code> only.
               </p>
               <form id="cred-form" class="form">
                 <label class="check">
                   <input type="checkbox" name="useEnvCredentials" />
-                  使用 .env 凭据（需 EXAMPLE_ALLOW_R2=1；endpoint 由服务端固定）
+                  Use .env credentials (needs EXAMPLE_ALLOW_R2=1; endpoint fixed by server)
                 </label>
                 <div class="grid-2">
                   <label>
@@ -44,19 +46,19 @@
                     <input name="bucket" autocomplete="off" />
                   </label>
                   <label>
-                    accountId（脱敏）
+                    accountId (redacted)
                     <input name="accountId" class="masked" autocomplete="off" spellcheck="false" />
                   </label>
                   <label>
-                    endpoint（可选）
+                    endpoint (optional)
                     <input name="endpoint" placeholder="https://….r2.cloudflarestorage.com" autocomplete="off" />
                   </label>
                   <label>
-                    accessKeyId（脱敏）
+                    accessKeyId (redacted)
                     <input name="accessKeyId" class="masked" autocomplete="off" spellcheck="false" />
                   </label>
                   <label>
-                    secretAccessKey（脱敏）
+                    secretAccessKey (redacted)
                     <input name="secretAccessKey" class="masked" autocomplete="off" spellcheck="false" />
                   </label>
                   <label>
@@ -65,7 +67,7 @@
                   </label>
                 </div>
                 <div class="actions">
-                  <button type="button" id="reload-defaults" class="ghost">从 .env 重新预填（脱敏）</button>
+                  <button type="button" id="reload-defaults" class="ghost">Reload from .env (redacted)</button>
                   <button type="button" id="probe-btn">probe</button>
                 </div>
               </form>
@@ -79,8 +81,8 @@
                   <input name="uniqueName" required value="demo/hello.txt" />
                 </label>
                 <label>
-                  contentType（可选，选文件后自动识别）
-                  <input name="contentType" placeholder="选择文件后自动填写，也可手改" />
+                  contentType (optional; auto-detected after file select)
+                  <input name="contentType" placeholder="Filled after file select; you may edit" />
                 </label>
                 <label class="check">
                   <input type="checkbox" name="upsert" checked />
@@ -134,13 +136,13 @@
         <div class="column">
           <section class="panel result-panel">
             <div class="result-head">
-              <h2>响应结果</h2>
+              <h2>Response</h2>
               <div style="display: flex; gap: 0.5rem; align-items: center">
                 <span id="result-status" class="result-status">IDLE</span>
-                <button type="button" id="clear-log" class="ghost">清空</button>
+                <button type="button" id="clear-log" class="ghost">Clear</button>
               </div>
             </div>
-            <pre id="log" class="result-body">在左侧发起调用后，结果会显示在这里。</pre>
+            <pre id="log" class="result-body">Results from calls on the left show here.</pre>
           </section>
         </div>
       </div>

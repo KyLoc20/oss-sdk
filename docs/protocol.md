@@ -1,83 +1,119 @@
-﻿# oss-sdk 协议
+﻿# oss-sdk protocol
 
-> **维护约定：** 凡变更 `StorageProvider` 契约、provider kind / id、uniqueName / locator 格式、remoteFs HTTP 路径与语义，或错误码约定，**必须同步更新本文档**。实现以 `src/types/` 与各 provider 为准。
-
----
-
-## 1. 目标与范围
-
-统一多后端对象存储：可恢复、可并发、可重试；支持 proxy 与 sharding。公开 API 为 `checkExist` / `get` / `create` / `delete`。
-
-| Kind | 含义 | 运行时 |
-|------|------|--------|
-| `localFs` | 本机沙箱目录（Node `fs`） | `oss-sdk/node` |
-| `remoteFs` | 对端 upload-service 沙箱 HTTP API | 主入口 |
-| `r2` | Cloudflare R2（S3 兼容） | 主入口 |
-
-**暂不支持：** `telegram`、统一 Bucket 抽象。r2 可另提供 bucket 辅助方法。
+> **Maintenance rule:** If you change the `StorageProvider` contract, provider kind / id, uniqueName / locator format, remoteFs HTTP paths or semantics, or error codes, **update this document**. The source of truth is `src/types/` and each provider.
 
 ---
 
-## 2. 术语
+## 1. Goals and scope
 
-| 术语 | 含义 |
-|------|------|
-| **provider** | 已注册存储实例（`kind` + 完整 `id`） |
-| **uniqueName** | 调用方保证唯一；路径型 provider 映射为 object key |
-| **locator** | 检索串：本地绝对路径、HTTP URL、或 opaque `r2:{bucket}/{key}` |
+This SDK gives one API for object storage on many backends. It supports resume, concurrency, retry, proxy, and sharding. The public API is `checkExist` / `get` / `create` / `delete`, plus discovery helpers `getStorageProviderId` / `verifyStorageProvider`.
 
-`get` 的 **destLocator（v1）必须是绝对文件路径**（禁止目录）。
+| Kind | Meaning | Runtime |
+|------|---------|---------|
+| `localFs` | Local sandbox directory (Node `fs`) | `oss-sdk/node` |
+| `remoteFs` | Peer upload-service sandbox HTTP API | Main entry |
+| `r2` | Cloudflare R2 (S3-compatible) | Main entry |
 
-### 2.1 信任边界（安全）
+**Not supported yet:** `telegram`, and a shared Bucket abstraction. The r2 provider can expose bucket helper methods.
 
-| 输入 | 规则 |
-|------|------|
-| `uniqueName` | 禁止 `..` / 空段；localFs 另做 root 内校验 + 默认拒绝符号链接逃逸 |
-| `sourceLocator`（本地路径） | **不得**直接接不可信用户输入（任意读文件） |
-| `sourceLocator`（http/s） | 默认 **SSRF 防护**（拒绝私网/链路本地/metadata；手动跟随重定向并复检）；`allowPrivateNetwork: true` 可关闭 |
-| `destLocator` | **不得**直接接不可信用户输入（任意写文件） |
-| `proxyUrl` | 仅允许 `http:` / `https:`；勿对不可信调用方暴露 |
+---
 
-`example/` 演示服：默认只绑 `127.0.0.1`；使用 `.env` R2 密钥需 `EXAMPLE_ALLOW_R2=1`，且 `useEnvCredentials` 必须显式为 true，此时 endpoint/密钥固定来自 `.env`。
+## 2. Terms
+
+| Term | Meaning |
+|------|---------|
+| **provider** | A registered storage instance (`kind` + full `id`) |
+| **uniqueName** | Caller-unique name; path providers map it to an object key |
+| **locator** | Lookup string: absolute local path, HTTP URL, or opaque `r2:{bucket}/{key}` |
+
+For `get`, **destLocator (v1) must be an absolute file path** (not a directory).
+
+### 2.1 Trust boundary (security)
+
+| Input | Rule |
+|-------|------|
+| `uniqueName` | Do not allow `..` or empty segments. localFs also checks the root and rejects symlink escape by default. |
+| `sourceLocator` (local path) | **Do not** pass untrusted user input (arbitrary file read). |
+| `sourceLocator` (http/s) | Default **SSRF protection** (reject private / link-local / metadata; follow redirects and re-check). Set `allowPrivateNetwork: true` to disable. |
+| `destLocator` | **Do not** pass untrusted user input (arbitrary file write). |
+| `proxyUrl` | Allow only `http:` / `https:`. Do not expose this to untrusted callers. |
+
+The `example/` demo server binds to `127.0.0.1` by default. To use R2 keys from `.env`, set `EXAMPLE_ALLOW_R2=1`. `useEnvCredentials` must be set to true. Then endpoint and keys always come from `.env`.
 
 ---
 
 ## 3. Provider ID
 
-| Family | 前缀 | 示例 | kind |
-|--------|------|------|------|
-| `fs` | `fs:` | `fs:windows-storage:HOST`、`fs:149.28.16.125` | `localFs` 或 `remoteFs` |
-| `r2` | `r2:` | `r2:media`（**不可**含 `/`） | `r2` |
+| Family | Prefix | Example | kind |
+|--------|--------|---------|------|
+| `fs` | `fs:` | `fs:windows-storage:HOST`, `fs:149.28.16.125` | `localFs` or `remoteFs` |
+| `r2` | `r2:` | **`r2:{accountId}:{bucket}`** (service-wide; **must not** contain `/`) | `r2` |
 
-- `localFs` / `remoteFs` 共用 `fs:`；具体 kind 由工厂决定。
-- 对象 locator `r2:{bucket}/{key}` **不是** provider id（含 `/`）。
+- `localFs` and `remoteFs` share the `fs:` prefix. The factory sets the kind.
+- Object locator `r2:{bucket}/{key}` **is not** a provider id (it contains `/`).
+- `accountId` and `bucket` segments must not contain `:` or `/`.
 
-工具：`buildProviderId`、`parseProviderId`、`encodeR2Locator` / `parseR2Locator`。
+Helpers: `buildProviderId`, `parseProviderId`, `encodeR2Locator` / `parseR2Locator`, **`getStorageProviderId`**, **`verifyStorageProvider`**.
+
+### 3.1 `getStorageProviderId` / `verifyStorageProvider`
+
+| API | Role |
+|-----|------|
+| `getStorageProviderId({ protocol, … })` | Build a unified `StorageProviderId` from protocol fields |
+| `verifyStorageProvider({ protocol, … })` | Check if the config is reachable; returns `{ ok, providerId?, error?, detail? }` |
+
+`protocol`: `'r2' | 'local-fs' | 'remote-fs'` (discovery layer uses hyphens).
+
+| protocol | getStorageProviderId fields | Result | verify |
+|----------|-----------------------------|--------|--------|
+| `r2` | `accountId`, `bucket` | `r2:{accountId}:{bucket}` | Also needs `accessKeyId`, `secretAccessKey` (optional `endpoint` / `region`); HeadBucket / `probe` |
+| `local-fs` | — | Not implemented (throws) | Not implemented (`ok: false`) |
+| `remote-fs` | — | Not implemented (throws) | Not implemented (`ok: false`) |
+
+```ts
+import { getStorageProviderId, verifyStorageProvider } from "@kyloc20/oss-sdk";
+
+const providerId = getStorageProviderId({
+  protocol: "r2",
+  accountId: "…",
+  bucket: "video",
+});
+// → "r2:…:video"
+
+const check = await verifyStorageProvider({
+  protocol: "r2",
+  accountId: "…",
+  bucket: "video",
+  accessKeyId: "…",
+  secretAccessKey: "…",
+});
+// → { ok: true, protocol: "r2", providerId, detail? }
+```
 
 ---
 
-## 4. 统一契约 `StorageProvider`
+## 4. Shared contract `StorageProvider`
 
-核心 API **一律对象传参**（禁止位置参数列表）。
+Core APIs **always take an object** (no positional argument lists).
 
-| 方法 | 参数类型 | 语义 |
-|------|----------|------|
-| `checkExist(params)` | `CheckExistParams` | ≈ HeadObject；不存在返回 `{ exists: false }`，不抛 |
-| `get(params)` | `GetParams` | ≈ GetObject → 写入本地绝对文件路径 |
-| `create(params)` | `CreateParams` | ≈ PutObject；源为本地文件路径或 `http(s)` URL |
-| `delete(params)` | `DeleteParams` | ≈ DeleteObject；不存在视为成功 |
-| `probe()` | — | 可选连通性检查 |
+| Method | Param type | Semantics |
+|--------|------------|-----------|
+| `checkExist(params)` | `CheckExistParams` | ≈ HeadObject; missing object returns `{ exists: false }`, does not throw |
+| `get(params)` | `GetParams` | ≈ GetObject → write to an absolute local file path |
+| `create(params)` | `CreateParams` | ≈ PutObject; source is a local file path or `http(s)` URL |
+| `delete(params)` | `DeleteParams` | ≈ DeleteObject; missing object counts as success |
+| `probe()` | — | Optional connectivity check |
 
-必填字段：
+Required fields:
 
-| 方法 | 必填 |
-|------|------|
+| Method | Required |
+|--------|----------|
 | checkExist | `uniqueName` |
 | get | `uniqueName`, `destLocator` |
 | create | `uniqueName`, `sourceLocator` |
 | delete | `uniqueName` |
 
-`StorageClient` 在以上参数上额外要求 `provider`（完整 id 或唯一 kind）：
+`StorageClient` also requires `provider` (full id or unique kind):
 
 ```ts
 await client.create({
@@ -88,79 +124,79 @@ await client.create({
 });
 ```
 
-### 4.1 uniqueName 规范化（路径型）
+### 4.1 uniqueName normalization (path providers)
 
-1. trim，`\` → `/`，去前导 `/`
-2. 禁止空段与 `..`
-3. 空非法
+1. Trim, replace `\` with `/`, remove leading `/`
+2. Reject empty segments and `..`
+3. Empty string is invalid
 
-r2：参数可为 uniqueName（相对默认 bucket）或 opaque locator `r2:{bucket}/{key}`。
+r2: the param can be a uniqueName (relative to the default bucket) or an opaque locator `r2:{bucket}/{key}`.
 
 ### 4.2 CreateResult.locator
 
 | Provider | locator |
 |----------|---------|
-| localFs | `publicBaseUrl`+path，否则绝对路径 |
+| localFs | `publicBaseUrl` + path, else absolute path |
 | remoteFs | `{baseUrl}{apiRoot}/download?path={key}` |
 | r2 | `r2:{bucket}/{key}` |
 
-### 4.3 横切选项
+### 4.3 Cross-cutting options
 
-| 能力 | 说明 |
-|------|------|
-| retry | 分片/请求级指数退避 |
-| concurrency | 上下行分片并行度 |
-| resume | 下载：按本地已有字节 Range 续传；上传会话续传 v1 可简化为分片重试 |
-| proxyUrl | 实例默认 + 单次覆盖（remoteFs；需 optional `undici`） |
-| sharding | 超阈值走 multipart / remoteFs chunk |
+| Capability | Notes |
+|------------|-------|
+| retry | Exponential backoff at shard / request level |
+| concurrency | Parallel shard count for upload / download |
+| resume | Download: Range resume from local bytes. Upload session resume in v1 may be shard retry only. |
+| proxyUrl | Instance default + per-call override (remoteFs; needs optional `undici`) |
+| sharding | Large objects use multipart / remoteFs chunk |
 
 ---
 
-## 5. 注册表
+## 5. Registry
 
-`createStorageClient` / `StorageProviderRegistry`：
+`createStorageClient` / `StorageProviderRegistry`:
 
-1. 主键 `provider.id`
-2. `resolve`：先精确 id；否则该 kind 仅一个实例时可传 kind
-3. 否则 `UNKNOWN_PROVIDER`
+1. Primary key is `provider.id`
+2. `resolve`: match exact id first; else if that kind has one instance, you may pass the kind
+3. Else `UNKNOWN_PROVIDER`
 
 ---
 
 ## 6. localFs
 
-配置：`rootDir`、`id`（`fs:…`）、可选 `publicBaseUrl`。
+Config: `rootDir`, `id` (`fs:…`), optional `publicBaseUrl`.
 
-| 操作 | 行为 |
-|------|------|
+| Operation | Behavior |
+|-----------|----------|
 | checkExist | `stat` |
-| get | 复制到 dest 绝对路径 |
-| create | 从本地路径或 URL 写入 root；`upsert: false` 拒绝覆盖 |
+| get | Copy to dest absolute path |
+| create | Write into root from local path or URL; `upsert: false` rejects overwrite |
 | delete | `rm` force |
-| probe | root 可访问 |
+| probe | root is reachable |
 
-路径必须落在 `rootDir` 内，否则 `PATH_ESCAPE`。
+Paths must stay under `rootDir`, or the call returns `PATH_ESCAPE`.
 
 ---
 
 ## 7. remoteFs
 
-对端 upload-service 沙箱 HTTP API。
+Peer upload-service sandbox HTTP API.
 
-### 7.1 配置
+### 7.1 Config
 
-| 字段 | 说明 |
-|------|------|
+| Field | Notes |
+|-------|-------|
 | `baseUrl` | origin |
 | `id` | `fs:…` |
-| `apiRoot` | 默认 `/v0/upload/file`；TEMP `/v0/upload/temp` |
-| `chunkThresholdBytes` | 默认 8 MiB |
-| `chunkSize` | 默认 4 MiB |
-| `proxyUrl` | 可选 |
+| `apiRoot` | Default `/v0/upload/file`; TEMP `/v0/upload/temp` |
+| `chunkThresholdBytes` | Default 8 MiB |
+| `chunkSize` | Default 4 MiB |
+| `proxyUrl` | Optional |
 
-### 7.2 HTTP（相对 `apiRoot`）
+### 7.2 HTTP (relative to `apiRoot`)
 
-| 操作 | 方法 | 路径 |
-|------|------|------|
+| Operation | Method | Path |
+|-----------|--------|------|
 | download / HEAD | GET/HEAD | `/download?path=` |
 | mkdir | POST | `/mkdir` |
 | rename | POST | `/rename` |
@@ -172,15 +208,15 @@ r2：参数可为 uniqueName（相对默认 bucket）或 opaque locator `r2:{buc
 | chunk abort | DELETE | `/upload/chunk/{uploadId}` |
 | root | GET | `/root` |
 
-`create`：小文件 multipart；大文件 chunk（可并发 part）→ rename 到目标 key。
+`create`: small files use multipart; large files use chunk (parts may run in parallel) → rename to the target key.
 
 ---
 
 ## 8. r2
 
-### 8.1 配置
+### 8.1 Config
 
-`id`（`r2:name`）、`bucket`、`accessKeyId`、`secretAccessKey`、`accountId` 或 `endpoint`；可选 `region`（默认 `auto`）。
+`id` (`r2:name`), `bucket`, `accessKeyId`, `secretAccessKey`, `accountId` or `endpoint`; optional `region` (default `auto`).
 
 ### 8.2 Locator
 
@@ -188,47 +224,54 @@ r2：参数可为 uniqueName（相对默认 bucket）或 opaque locator `r2:{buc
 r2:{bucket}/{key}
 ```
 
-`encodeR2Locator` / `parseR2Locator`。key 可含 `/`；bucket 不可含 `/`。
+`encodeR2Locator` / `parseR2Locator`. The key may contain `/`. The bucket must not contain `/`.
 
-### 8.3 行为
+### 8.3 Behavior
 
-| 操作 | S3 API |
-|------|--------|
+| Operation | S3 API |
+|-----------|--------|
 | checkExist | HeadObject |
-| get | GetObject（支持 Range 续传） |
-| create | PutObject 或 CreateMultipartUpload + UploadPart + Complete |
+| get | GetObject (supports Range resume) |
+| create | PutObject or CreateMultipartUpload + UploadPart + Complete |
 | delete | DeleteObject |
 
-### 8.4 Bucket 辅助（非统一契约）
+### 8.4 Bucket helpers (not part of the shared contract)
 
-`createBucket` / `deleteBucket` / `headBucket` / `listBuckets` — 仅挂在 r2 provider 实例上。
-
----
-
-## 9. Parcel 适配
-
-`createParcelUploadAdapter(provider)`：内存写入临时文件后 `create`；`url` = `CreateResult.locator`。
+`createBucket` / `deleteBucket` / `headBucket` / `listBuckets` — only on the r2 provider instance.
 
 ---
 
-## 10. 错误码
+## 9. Parcel adapter
 
-| code | 场景 |
+`createParcelUploadAdapter(provider)`: write memory to a temp file, then `create`; `url` = `CreateResult.locator`.
+
+---
+
+## 10. Error codes
+
+| code | When |
 |------|------|
-| `UNKNOWN_PROVIDER` | 无法 resolve |
-| `NOT_FOUND` | get 源不存在 |
-| `CONFIG` | 配置/参数非法 |
-| `CHECK_FAILED` / `GET_FAILED` / `CREATE_FAILED` / `DELETE_FAILED` | 操作失败 |
-| `PATH_ESCAPE` | localFs 越界 |
-| `ALREADY_EXISTS` | upsert/overwrite 冲突 |
-| `RESUME_INVALID` | 续传状态不合法 |
-| `STORAGE_ERROR` | 通用 |
+| `UNKNOWN_PROVIDER` | Cannot resolve |
+| `NOT_FOUND` | get source missing |
+| `CONFIG` | Invalid config / params |
+| `CHECK_FAILED` / `GET_FAILED` / `CREATE_FAILED` / `DELETE_FAILED` | Operation failed |
+| `PATH_ESCAPE` | localFs path escape |
+| `ALREADY_EXISTS` | upsert / overwrite conflict |
+| `RESUME_INVALID` | Invalid resume state |
+| `STORAGE_ERROR` | Generic |
 
 ---
 
-## 11. 变更检查清单
+## 11. Operation telemetry
 
-- [ ] 更新本文档
-- [ ] 更新 `src/types/`
-- [ ] 各 provider 与 typecheck / build
-- [ ] README 示例同步
+See **[telemetry.md](./telemetry.md)** (`OSS_SDK_TELEMETRY_ON` / `OSS_SDK_TELEMETRY_DIR`; Client facade + `verifyStorageProvider` instrumentation).
+
+---
+
+## 12. Change checklist
+
+- [ ] Update this document
+- [ ] Update `src/types/`
+- [ ] Update each provider and run typecheck / build
+- [ ] Keep README examples in sync
+- [ ] If telemetry changes: update [telemetry.md](./telemetry.md)

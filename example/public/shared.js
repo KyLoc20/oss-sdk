@@ -22,7 +22,7 @@ export function createResultView({ logEl, statusEl }) {
       statusEl.classList.toggle("fail", !ok);
       logEl.textContent = typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
     },
-    loading(message = "请求中…") {
+    loading(message = "Requesting…") {
       statusEl.textContent = "LOADING";
       statusEl.classList.remove("ok", "fail");
       statusEl.classList.add("loading");
@@ -31,13 +31,13 @@ export function createResultView({ logEl, statusEl }) {
     clear() {
       statusEl.textContent = "IDLE";
       statusEl.classList.remove("ok", "fail", "loading");
-      logEl.textContent = "在左侧发起调用后，结果会显示在这里。";
+      logEl.textContent = "Results from calls on the left show here.";
     },
   };
 }
 
 /** Disable control and show loading label while fn runs. */
-export async function withButtonLoading(button, fn, loadingText = "处理中…") {
+export async function withButtonLoading(button, fn, loadingText = "Working…") {
   if (!button) {
     return fn();
   }
@@ -77,7 +77,7 @@ export function bindAutoContentType(fileInput, contentTypeInput) {
       contentTypeInput.dataset.autofilled = "1";
       contentTypeInput.placeholder = contentTypeInput.value
         ? contentTypeInput.value
-        : "未能识别，可手动填写";
+        : "Not detected; enter manually";
     }
   });
   contentTypeInput.addEventListener("input", () => {
