@@ -44,11 +44,13 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Log Node and npm versions
+      # Node 22 ships npm 10; Trusted Publishing needs npm >= 11.5.1 or publish gets E404.
+      - name: Upgrade npm for Trusted Publishing
         run: |
           node -v
+          npm install -g npm@^11.5.1
           npm -v
 
-      # Trusted Publishing (OIDC). npm CLI authenticates via GitHub id-token.
+      # Trusted Publishing (OIDC). Do not set NODE_AUTH_TOKEN on this step.
       - name: Publish to npm
         run: npm publish --access public
